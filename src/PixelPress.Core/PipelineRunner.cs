@@ -77,8 +77,23 @@ public sealed class PipelineRunner
                             await operation.ApplyAsync(image, context, token);
                         }
 
-                        await _imageProcessor.SaveAsync(image, outputPath, token);
-                        outputBytes = TryGetFileLength(outputPath);
+                        outputPath = context.OutputPath;
+
+                        if (!request.OverwriteExisting && File.Exists(outputPath))
+                        {
+                            status = FileProcessStatus.Skipped;
+                            outputBytes = TryGetFileLength(outputPath);
+                            return;
+                        }
+
+                        var saveResult = await _imageProcessor.SaveAsync(image, outputPath, context.SaveOptions, token);
+                        outputBytes = saveResult.BytesWritten > 0 ? saveResult.BytesWritten : TryGetFileLength(outputPath);
+
+                        if (!saveResult.TargetSatisfied)
+                        {
+                            status = FileProcessStatus.Error;
+                            errorMessage = saveResult.Message ?? "Target file size could not be met.";
+                        }
                     }
                     catch (OperationCanceledException)
                     {

@@ -49,8 +49,26 @@ public sealed class PipelineRunRequest
     public bool OverwriteExisting { get; init; } = true;
 }
 
-public sealed record ImageJobContext(
-    string InputPath,
-    string OutputPath,
-    int Index,
-    int Total);
+public sealed class ImageJobContext
+{
+    public ImageJobContext(string inputPath, string outputPath, int index, int total)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(inputPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+
+        InputPath = inputPath;
+        OutputPath = outputPath;
+        Index = index;
+        Total = total;
+    }
+
+    public string InputPath { get; }
+
+    public string OutputPath { get; set; }
+
+    public int Index { get; }
+
+    public int Total { get; }
+
+    public ImageSaveOptions SaveOptions { get; } = new();
+}
