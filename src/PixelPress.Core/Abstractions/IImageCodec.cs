@@ -7,5 +7,9 @@ public interface IImageCodec
 {
     Task<Image<Rgba32>> LoadAsync(string inputPath, CancellationToken cancellationToken = default);
 
-    Task SaveAsync(Image<Rgba32> image, string outputPath, CancellationToken cancellationToken = default);
+    Task<ImageSaveResult> SaveAsync(
+        Image<Rgba32> image,
+        string outputPath,
+        ImageSaveOptions? saveOptions = null,
+        CancellationToken cancellationToken = default);
 }

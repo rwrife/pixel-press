@@ -18,8 +18,12 @@ public sealed class ImageSharpImageProcessor : IImageProcessor
         return _codec.LoadAsync(inputPath, cancellationToken);
     }
 
-    public Task SaveAsync(Image<Rgba32> image, string outputPath, CancellationToken cancellationToken = default)
+    public Task<ImageSaveResult> SaveAsync(
+        Image<Rgba32> image,
+        string outputPath,
+        ImageSaveOptions? saveOptions = null,
+        CancellationToken cancellationToken = default)
     {
-        return _codec.SaveAsync(image, outputPath, cancellationToken);
+        return _codec.SaveAsync(image, outputPath, saveOptions, cancellationToken);
     }
 }
