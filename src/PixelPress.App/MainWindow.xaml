@@ -1,11 +1,278 @@
 <Window x:Class="PixelPress.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="pixel-press" Height="450" Width="800">
-    <Grid>
-        <TextBlock Text="pixel-press bootstrap"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   FontSize="22"/>
-    </Grid>
+        xmlns:vm="clr-namespace:PixelPress.App.ViewModels"
+        Title="pixel-press"
+        Height="760"
+        Width="1260"
+        MinHeight="700"
+        MinWidth="1100"
+        AllowDrop="True"
+        Drop="Window_Drop">
+    <DockPanel Margin="12">
+        <TextBlock DockPanel.Dock="Top"
+                   Text="pixel-press — offline batch image pipeline"
+                   FontSize="20"
+                   FontWeight="SemiBold" />
+
+        <Grid DockPanel.Dock="Top" Margin="0,10,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2.4*" />
+                <ColumnDefinition Width="2.6*" />
+                <ColumnDefinition Width="3.2*" />
+            </Grid.ColumnDefinitions>
+
+            <GroupBox Header="Inputs" Grid.Column="0" Margin="0,0,8,0">
+                <DockPanel Margin="8">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Content="Add Files..." Padding="10,4" Margin="0,0,6,0" Click="AddFilesButton_Click" />
+                        <Button Content="Add Folder..." Padding="10,4" Margin="0,0,6,0" Click="AddFolderButton_Click" />
+                        <Button Content="Remove" Padding="10,4" Margin="0,0,6,0"
+                                Command="{Binding RemoveSelectedInputCommand}" />
+                        <Button Content="Clear" Padding="10,4"
+                                Command="{Binding ClearInputsCommand}" />
+                    </StackPanel>
+
+                    <TextBlock DockPanel.Dock="Top"
+                               Margin="0,0,0,8"
+                               Foreground="#6b7280"
+                               Text="Drag and drop images or folders here." />
+
+                    <ListBox x:Name="InputList"
+                             ItemsSource="{Binding InputFiles}"
+                             SelectedItem="{Binding SelectedInput}"
+                             Drop="InputList_Drop"
+                             BorderBrush="#d1d5db"
+                             BorderThickness="1"
+                             Background="#f9fafb"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="#e5e7eb" BorderThickness="0,0,0,1" Padding="4">
+                                    <DockPanel>
+                                        <Border Width="72" Height="54" CornerRadius="4" Background="#e5e7eb" Margin="0,0,8,0">
+                                            <Image Source="{Binding Thumbnail}" Stretch="UniformToFill" />
+                                        </Border>
+                                        <TextBlock Text="{Binding FileName}"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </GroupBox>
+
+            <GroupBox Header="Pipeline builder" Grid.Column="1" Margin="0,0,8,0">
+                <DockPanel Margin="8">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                        <ComboBox Width="170"
+                                  Margin="0,0,8,0"
+                                  ItemsSource="{Binding OperationKinds}"
+                                  SelectedItem="{Binding NewOperationKind}" />
+                        <Button Content="Add operation"
+                                Padding="10,4"
+                                Command="{Binding AddOperationCommand}" />
+                    </StackPanel>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Operations}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#d1d5db"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Background="#f9fafb"
+                                            Padding="8"
+                                            Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <DockPanel LastChildFill="False">
+                                                <CheckBox IsChecked="{Binding IsEnabled}" Content="Enabled" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                <ComboBox Width="130"
+                                                          Margin="0,0,8,0"
+                                                          ItemsSource="{x:Static vm:OperationViewModel.AllKinds}"
+                                                          SelectedItem="{Binding Kind}" />
+                                                <Button Content="↑"
+                                                        Width="30"
+                                                        Margin="0,0,4,0"
+                                                        Command="{Binding DataContext.MoveOperationUpCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}" />
+                                                <Button Content="↓"
+                                                        Width="30"
+                                                        Margin="0,0,4,0"
+                                                        Command="{Binding DataContext.MoveOperationDownCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}" />
+                                                <Button Content="✕"
+                                                        Width="30"
+                                                        Command="{Binding DataContext.RemoveOperationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}" />
+                                            </DockPanel>
+
+                                            <StackPanel Margin="0,8,0,0">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:OperationKind.Resize}">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <WrapPanel>
+                                                    <TextBlock Text="Mode" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                                    <ComboBox Width="120"
+                                                              Margin="0,0,8,0"
+                                                              ItemsSource="{x:Static vm:OperationViewModel.ResizeModes}"
+                                                              SelectedItem="{Binding ResizeMode}" />
+                                                    <TextBlock Text="W" VerticalAlignment="Center" Margin="0,0,4,0" />
+                                                    <TextBox Width="55" Margin="0,0,8,0" Text="{Binding Width}" />
+                                                    <TextBlock Text="H" VerticalAlignment="Center" Margin="0,0,4,0" />
+                                                    <TextBox Width="55" Margin="0,0,8,0" Text="{Binding Height}" />
+                                                    <TextBlock Text="%" VerticalAlignment="Center" Margin="0,0,4,0" />
+                                                    <TextBox Width="55" Margin="0,0,8,0" Text="{Binding Percentage}" />
+                                                    <CheckBox Content="Upscale" IsChecked="{Binding AllowUpscale}" VerticalAlignment="Center" />
+                                                </WrapPanel>
+                                            </StackPanel>
+
+                                            <StackPanel Margin="0,8,0,0">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:OperationKind.Convert}">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <WrapPanel>
+                                                    <TextBlock Text="Format" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                    <ComboBox Width="120"
+                                                              ItemsSource="{x:Static vm:OperationViewModel.OutputFormats}"
+                                                              SelectedItem="{Binding TargetFormat}" />
+                                                </WrapPanel>
+                                            </StackPanel>
+
+                                            <StackPanel Margin="0,8,0,0">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:OperationKind.Compress}">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <WrapPanel>
+                                                    <TextBlock Text="Quality" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                    <TextBox Width="60" Margin="0,0,8,0" Text="{Binding Quality}" />
+                                                    <CheckBox Content="Strip metadata" IsChecked="{Binding StripMetadata}" VerticalAlignment="Center" />
+                                                </WrapPanel>
+                                            </StackPanel>
+
+                                            <StackPanel Margin="0,8,0,0">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:OperationKind.Watermark}">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <WrapPanel>
+                                                    <TextBlock Text="Text" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                    <TextBox Width="120" Margin="0,0,8,0" Text="{Binding WatermarkText}" />
+                                                    <TextBlock Text="Position" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                    <ComboBox Width="130"
+                                                              Margin="0,0,8,0"
+                                                              ItemsSource="{x:Static vm:OperationViewModel.WatermarkPositions}"
+                                                              SelectedItem="{Binding WatermarkPosition}" />
+                                                    <TextBlock Text="Opacity" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                    <TextBox Width="50" Margin="0,0,8,0" Text="{Binding WatermarkOpacity}" />
+                                                    <TextBlock Text="Scale" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                    <TextBox Width="50" Text="{Binding WatermarkScale}" />
+                                                </WrapPanel>
+                                            </StackPanel>
+
+                                            <StackPanel Margin="0,8,0,0">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:OperationKind.Rename}">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <StackPanel>
+                                                    <TextBlock Text="Template (tokens: {name} {index} {width} {height} {date} {ext})"
+                                                               Foreground="#6b7280"
+                                                               Margin="0,0,0,4" />
+                                                    <TextBox Text="{Binding RenameTemplate}" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </GroupBox>
+
+            <GroupBox Header="Live preview" Grid.Column="2">
+                <DockPanel Margin="8">
+                    <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" BorderBrush="#d1d5db" BorderThickness="1" CornerRadius="4" Margin="0,0,6,0" Background="#f3f4f6">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="Before" FontWeight="SemiBold" Margin="6,6,6,0" />
+                                <Image Source="{Binding PreviewBefore}" Stretch="Uniform" Margin="6" />
+                            </DockPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" BorderBrush="#d1d5db" BorderThickness="1" CornerRadius="4" Margin="6,0,0,0" Background="#f3f4f6">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="After" FontWeight="SemiBold" Margin="6,6,6,0" />
+                                <Image Source="{Binding PreviewAfter}" Stretch="Uniform" Margin="6" />
+                            </DockPanel>
+                        </Border>
+                    </Grid>
+
+                    <TextBlock Text="{Binding PreviewSummary}" TextWrapping="Wrap" />
+                </DockPanel>
+            </GroupBox>
+        </Grid>
+
+        <Border DockPanel.Dock="Bottom" BorderBrush="#d1d5db" BorderThickness="1" CornerRadius="6" Padding="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="Output folder" VerticalAlignment="Center" Margin="0,0,10,0" />
+                <TextBox Grid.Column="1" Margin="0,0,8,0" Text="{Binding OutputDirectory}" />
+                <Button Grid.Column="2" Content="Browse..." Padding="10,4" Margin="0,0,8,0" Click="BrowseOutputButton_Click" />
+                <Button Grid.Column="3"
+                        Content="Run batch"
+                        FontWeight="SemiBold"
+                        Padding="14,6"
+                        IsEnabled="{Binding CanRunBatch}"
+                        Click="RunButton_Click" />
+            </Grid>
+        </Border>
+    </DockPanel>
 </Window>
