@@ -47,6 +47,8 @@ public sealed class PipelineRunRequest
     public IReadOnlyList<IImageOperation> Operations { get; init; } = [];
     public int MaxDegreeOfParallelism { get; init; } = Environment.ProcessorCount;
     public bool OverwriteExisting { get; init; } = true;
+    public bool WriteInPlace { get; init; }
+    public bool CreateBackupWhenInPlace { get; init; }
 }
 
 public sealed class ImageJobContext
