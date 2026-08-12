@@ -1,0 +1,32 @@
+<Window x:Class="PixelPress.App.ProgressWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Running pixel-press"
+        Width="420"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner">
+    <StackPanel Margin="16">
+        <TextBlock x:Name="StatusText"
+                   Text="Preparing batch..."
+                   Margin="0,0,0,8"
+                   TextWrapping="Wrap" />
+
+        <ProgressBar x:Name="RunProgressBar"
+                     Minimum="0"
+                     Maximum="1"
+                     Value="0"
+                     Height="18"
+                     Margin="0,0,0,8" />
+
+        <TextBlock x:Name="CountText"
+                   Text="0 / 0"
+                   Margin="0,0,0,12" />
+
+        <Button Content="Cancel"
+                Width="90"
+                HorizontalAlignment="Right"
+                Padding="10,4"
+                Click="CancelButton_Click" />
+    </StackPanel>
+</Window>
