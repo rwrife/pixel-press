@@ -7,6 +7,7 @@ using PixelPress.App.Services;
 using PixelPress.Core;
 using PixelPress.Core.Abstractions;
 using PixelPress.Core.Imaging;
+using PixelPress.Core.Recipes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
@@ -293,6 +294,58 @@ public sealed class MainWindowViewModel : ObservableObject
                      $"Net size change: {FormatDeltaBytes(bytesSaved)}";
 
         return report;
+    }
+
+    public PipelineRecipe ExportRecipe(string? recipeName = null, string? description = null)
+    {
+        var safeName = string.IsNullOrWhiteSpace(recipeName)
+            ? $"recipe-{DateTime.Now:yyyyMMdd-HHmmss}"
+            : recipeName.Trim();
+
+        return new PipelineRecipe
+        {
+            Name = safeName,
+            Description = description,
+            Operations = Operations.Select(op => op.ToRecipeOperation()).ToList()
+        };
+    }
+
+    public void ImportRecipe(PipelineRecipe recipe)
+    {
+        ArgumentNullException.ThrowIfNull(recipe);
+
+        Operations.CollectionChanged -= OnOperationsCollectionChanged;
+        try
+        {
+            foreach (var operation in Operations)
+            {
+                operation.PropertyChanged -= OnOperationPropertyChanged;
+            }
+
+            Operations.Clear();
+
+            foreach (var operation in recipe.Operations)
+            {
+                var viewModel = OperationViewModel.FromRecipeOperation(operation);
+                viewModel.PropertyChanged += OnOperationPropertyChanged;
+                Operations.Add(viewModel);
+            }
+
+            if (Operations.Count == 0)
+            {
+                Operations.Add(new OperationViewModel(OperationKind.Resize));
+            }
+
+            SelectedOperation = Operations.FirstOrDefault();
+        }
+        finally
+        {
+            Operations.CollectionChanged += OnOperationsCollectionChanged;
+        }
+
+        RaiseOperationCommandState();
+        PersistSettings();
+        QueuePreviewRefresh();
     }
 
     public void PersistSettings()
