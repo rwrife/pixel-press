@@ -61,11 +61,13 @@ Recipe: *"Web export"* — 1600px longest edge, WebP quality 80, strip metadata,
 
 Select all → **Run** → 240 photos exported to `.\web` in one pass.
 
-### Command-line (headless) — planned
+### Command-line (headless)
 
 ```powershell
-pixelpress run --recipe "web-export.json" --in ".\raw" --out ".\web"
+dotnet run --project src/PixelPress.Cli -- run --recipe "web-export" --in ".\\raw" --out ".\\web"
 ```
+
+Recipes are JSON files under `%APPDATA%\\pixel-press\\recipes` and can also be referenced by file path.
 
 ## Local-AI integration (optional)
 

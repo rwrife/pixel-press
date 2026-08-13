@@ -76,6 +76,13 @@
                                 Command="{Binding AddOperationCommand}" />
                     </StackPanel>
 
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Content="Save Recipe..." Padding="10,4" Margin="0,0,6,0" Click="SaveRecipeButton_Click" />
+                        <Button Content="Load Recipe..." Padding="10,4" Margin="0,0,6,0" Click="LoadRecipeButton_Click" />
+                        <Button Content="Preset: Web export" Padding="10,4" Margin="0,0,6,0" Click="LoadWebPresetButton_Click" />
+                        <Button Content="Preset: Email compress" Padding="10,4" Click="LoadEmailPresetButton_Click" />
+                    </StackPanel>
+
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding Operations}">
                             <ItemsControl.ItemTemplate>

@@ -2,6 +2,7 @@ using PixelPress.App.Services;
 using PixelPress.Core;
 using PixelPress.Core.Abstractions;
 using PixelPress.Core.Operations;
+using PixelPress.Core.Recipes;
 
 namespace PixelPress.App.ViewModels;
 
@@ -202,6 +203,69 @@ public sealed class OperationViewModel : ObservableObject
             WatermarkOpacity = settings.WatermarkOpacity,
             WatermarkScale = settings.WatermarkScale,
             RenameTemplate = settings.RenameTemplate
+        };
+    }
+
+    public RecipeOperation ToRecipeOperation()
+    {
+        return new RecipeOperation
+        {
+            Kind = Kind switch
+            {
+                OperationKind.Resize => RecipeOperationKind.Resize,
+                OperationKind.Convert => RecipeOperationKind.Convert,
+                OperationKind.Compress => RecipeOperationKind.Compress,
+                OperationKind.Watermark => RecipeOperationKind.Watermark,
+                OperationKind.Rename => RecipeOperationKind.Rename,
+                _ => RecipeOperationKind.Resize
+            },
+            IsEnabled = IsEnabled,
+            ResizeMode = ResizeMode,
+            Width = Width,
+            Height = Height,
+            Percentage = Percentage,
+            AllowUpscale = AllowUpscale,
+            TargetFormat = TargetFormat,
+            Quality = Quality,
+            StripMetadata = StripMetadata,
+            WatermarkText = WatermarkText,
+            WatermarkPosition = WatermarkPosition,
+            WatermarkOpacity = WatermarkOpacity,
+            WatermarkScale = WatermarkScale,
+            RenameTemplate = RenameTemplate
+        };
+    }
+
+    public static OperationViewModel FromRecipeOperation(RecipeOperation operation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+
+        var kind = operation.Kind switch
+        {
+            RecipeOperationKind.Resize => OperationKind.Resize,
+            RecipeOperationKind.Convert => OperationKind.Convert,
+            RecipeOperationKind.Compress => OperationKind.Compress,
+            RecipeOperationKind.Watermark => OperationKind.Watermark,
+            RecipeOperationKind.Rename => OperationKind.Rename,
+            _ => OperationKind.Resize
+        };
+
+        return new OperationViewModel(kind)
+        {
+            IsEnabled = operation.IsEnabled,
+            ResizeMode = operation.ResizeMode,
+            Width = operation.Width,
+            Height = operation.Height,
+            Percentage = operation.Percentage,
+            AllowUpscale = operation.AllowUpscale,
+            TargetFormat = operation.TargetFormat,
+            Quality = operation.Quality,
+            StripMetadata = operation.StripMetadata,
+            WatermarkText = operation.WatermarkText,
+            WatermarkPosition = operation.WatermarkPosition,
+            WatermarkOpacity = operation.WatermarkOpacity,
+            WatermarkScale = operation.WatermarkScale,
+            RenameTemplate = operation.RenameTemplate
         };
     }
 
