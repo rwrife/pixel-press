@@ -1,4 +1,5 @@
 using PixelPress.Core;
+using PixelPress.Core.Ai;
 using PixelPress.Core.Imaging;
 using PixelPress.Core.Recipes;
 
@@ -53,11 +54,34 @@ static async Task<int> RunAsync(string[] args)
         return 2;
     }
 
-    var operations = RecipeOperationFactory.BuildOperations(recipe.Operations);
+    var enableAiSmartCrop = OptionEnabled(values, "ai-smart-crop");
+    var enableAiAutoName = OptionEnabled(values, "ai-auto-name");
+
+    IImageAiService? aiService = null;
+    if (enableAiSmartCrop || enableAiAutoName)
+    {
+        aiService = await BuildAiServiceAsync(values);
+        if (aiService is null)
+        {
+            Console.WriteLine("AI endpoint unavailable or invalid; continuing with deterministic fallback behavior.");
+        }
+    }
+
+    var operations = RecipeOperationFactory.BuildOperations(
+        recipe.Operations,
+        aiService,
+        enableSmartCrop: enableAiSmartCrop,
+        enableAutoNaming: enableAiAutoName);
 
     Console.WriteLine($"Recipe: {recipe.Name}");
     Console.WriteLine($"Inputs: {inputPaths.Length}");
     Console.WriteLine($"Output: {Path.GetFullPath(outputArg)}");
+
+    if (enableAiSmartCrop || enableAiAutoName)
+    {
+        Console.WriteLine($"AI smart crop: {(enableAiSmartCrop ? "enabled" : "disabled")}");
+        Console.WriteLine($"AI auto naming: {(enableAiAutoName ? "enabled" : "disabled")}");
+    }
 
     var runner = new PipelineRunner(new ImageSharpImageProcessor());
 
@@ -79,6 +103,41 @@ static async Task<int> RunAsync(string[] args)
     PrintSummary(result);
 
     return result.Failed > 0 ? 1 : 0;
+}
+
+static async Task<IImageAiService?> BuildAiServiceAsync(IReadOnlyDictionary<string, string> values)
+{
+    if (!values.TryGetValue("ai-endpoint", out var endpointRaw)
+        || string.IsNullOrWhiteSpace(endpointRaw))
+    {
+        Console.WriteLine("AI features were requested, but --ai-endpoint was not provided.");
+        return null;
+    }
+
+    if (!LocalOpenAiImageAiService.TryResolveLoopbackEndpoint(endpointRaw, out var endpoint, out var failureReason))
+    {
+        Console.WriteLine($"AI endpoint rejected: {failureReason}");
+        return null;
+    }
+
+    var model = values.TryGetValue("ai-model", out var modelRaw) && !string.IsNullOrWhiteSpace(modelRaw)
+        ? modelRaw
+        : "minicpm-v";
+
+    var apiKey = values.TryGetValue("ai-api-key", out var apiKeyRaw) && !string.IsNullOrWhiteSpace(apiKeyRaw)
+        ? apiKeyRaw
+        : null;
+
+    var service = new LocalOpenAiImageAiService(endpoint!, model, apiKey);
+    var reachable = await service.IsReachableAsync();
+    if (!reachable)
+    {
+        Console.WriteLine($"AI endpoint is not reachable at {endpoint}.");
+        return null;
+    }
+
+    Console.WriteLine($"AI endpoint reachable: {endpoint} (model: {model})");
+    return service;
 }
 
 static PipelineRecipe LoadRecipe(RecipeStore store, string recipeArg)
@@ -142,16 +201,40 @@ static Dictionary<string, string> ParseOptions(string[] args)
         }
 
         var key = arg[2..];
-        if (string.IsNullOrWhiteSpace(key) || i + 1 >= args.Length)
+        if (string.IsNullOrWhiteSpace(key))
         {
             continue;
         }
 
-        values[key] = args[i + 1];
-        i++;
+        if (i + 1 < args.Length && !args[i + 1].StartsWith("--", StringComparison.Ordinal))
+        {
+            values[key] = args[i + 1];
+            i++;
+            continue;
+        }
+
+        values[key] = "true";
     }
 
     return values;
+}
+
+static bool OptionEnabled(IReadOnlyDictionary<string, string> values, string key)
+{
+    if (!values.TryGetValue(key, out var raw))
+    {
+        return false;
+    }
+
+    if (string.IsNullOrWhiteSpace(raw))
+    {
+        return true;
+    }
+
+    return raw.Equals("true", StringComparison.OrdinalIgnoreCase)
+        || raw.Equals("1", StringComparison.OrdinalIgnoreCase)
+        || raw.Equals("yes", StringComparison.OrdinalIgnoreCase)
+        || raw.Equals("on", StringComparison.OrdinalIgnoreCase);
 }
 
 static bool HasFlag(IEnumerable<string> args, string flag)
@@ -190,9 +273,17 @@ static string FormatBytes(long bytes)
 
 static void PrintHelp()
 {
-    Console.WriteLine("pixelpress run --recipe <file|preset-name> --in <file-or-dir> --out <dir>");
+    Console.WriteLine("pixelpress run --recipe <file|preset-name> --in <file-or-dir> --out <dir> [options]");
+    Console.WriteLine();
+    Console.WriteLine("Options:");
+    Console.WriteLine("  --ai-smart-crop               Enable AI-assisted crop focus for Fill resize operations");
+    Console.WriteLine("  --ai-auto-name                Enable AI-assisted output naming for Rename operations");
+    Console.WriteLine("  --ai-endpoint <url>           Local OpenAI-compatible endpoint (loopback only)");
+    Console.WriteLine("  --ai-model <name>             Model name (default: minicpm-v)");
+    Console.WriteLine("  --ai-api-key <token>          Optional API key for local endpoint");
     Console.WriteLine();
     Console.WriteLine("Examples:");
     Console.WriteLine("  pixelpress run --recipe web-export --in ./raw --out ./web");
-    Console.WriteLine("  pixelpress run --recipe ./my-recipe.json --in ./input --out ./output");
+    Console.WriteLine("  pixelpress run --recipe thumbnails --in ./raw --out ./thumbs --ai-smart-crop --ai-endpoint http://127.0.0.1:11434/v1 --ai-model minicpm-v");
+    Console.WriteLine("  pixelpress run --recipe web-export --in ./raw --out ./web --ai-auto-name --ai-endpoint http://127.0.0.1:11434/v1 --ai-model minicpm-v");
 }

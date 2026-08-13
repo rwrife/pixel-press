@@ -2,7 +2,7 @@
 
 **Windows batch image resizer, converter & optimizer.** Drop in a folder or a pile of images, apply a stack of operations — resize, convert format, compress, watermark, rename — and export them all in one pass, with a live before/after preview. Offline and privacy-first: every pixel is processed on your machine.
 
-> Status: 🚧 Bootstrapping (docs + backlog). No app code yet — see [PLAN.md](PLAN.md) and the [issue backlog](https://github.com/rwrife/pixel-press/issues).
+> Status: 🚧 Active development. Core pipeline, WPF shell, and headless CLI are in place; CI and release packaging are being finalized in the issue backlog.
 
 ---
 
@@ -65,6 +65,13 @@ Select all → **Run** → 240 photos exported to `.\web` in one pass.
 
 ```powershell
 dotnet run --project src/PixelPress.Cli -- run --recipe "web-export" --in ".\\raw" --out ".\\web"
+```
+
+Enable optional local-AI smart crop / naming (loopback-only endpoint):
+
+```powershell
+dotnet run --project src/PixelPress.Cli -- run --recipe "thumbnails" --in ".\\raw" --out ".\\thumbs" `
+  --ai-smart-crop --ai-auto-name --ai-endpoint "http://127.0.0.1:11434/v1" --ai-model "minicpm-v"
 ```
 
 Recipes are JSON files under `%APPDATA%\\pixel-press\\recipes` and can also be referenced by file path.
