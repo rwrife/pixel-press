@@ -1,11 +1,16 @@
 using PixelPress.Core.Abstractions;
+using PixelPress.Core.Ai;
 using PixelPress.Core.Operations;
 
 namespace PixelPress.Core.Recipes;
 
 public static class RecipeOperationFactory
 {
-    public static IReadOnlyList<IImageOperation> BuildOperations(IEnumerable<RecipeOperation> operationSettings)
+    public static IReadOnlyList<IImageOperation> BuildOperations(
+        IEnumerable<RecipeOperation> operationSettings,
+        IImageAiService? aiService = null,
+        bool enableSmartCrop = false,
+        bool enableAutoNaming = false)
     {
         ArgumentNullException.ThrowIfNull(operationSettings);
 
@@ -18,7 +23,7 @@ public static class RecipeOperationFactory
                 continue;
             }
 
-            var operation = BuildOperation(setting);
+            var operation = BuildOperation(setting, aiService, enableSmartCrop, enableAutoNaming);
             if (operation is not null)
             {
                 operations.Add(operation);
@@ -28,23 +33,35 @@ public static class RecipeOperationFactory
         return operations;
     }
 
-    private static IImageOperation? BuildOperation(RecipeOperation setting)
+    private static IImageOperation? BuildOperation(
+        RecipeOperation setting,
+        IImageAiService? aiService,
+        bool enableSmartCrop,
+        bool enableAutoNaming)
     {
         return setting.Kind switch
         {
-            RecipeOperationKind.Resize => BuildResizeOperation(setting),
+            RecipeOperationKind.Resize => BuildResizeOperation(setting, aiService, enableSmartCrop),
             RecipeOperationKind.Convert => new ConvertOperation(setting.TargetFormat),
             RecipeOperationKind.Compress => CompressOperation.QualityOnly(Math.Clamp(setting.Quality, 0, 100), setting.StripMetadata),
             RecipeOperationKind.Watermark => BuildWatermarkOperation(setting),
-            RecipeOperationKind.Rename => BuildRenameOperation(setting),
+            RecipeOperationKind.Rename => BuildRenameOperation(setting, aiService, enableAutoNaming),
             _ => null
         };
     }
 
-    private static IImageOperation BuildResizeOperation(RecipeOperation setting)
+    private static IImageOperation BuildResizeOperation(
+        RecipeOperation setting,
+        IImageAiService? aiService,
+        bool enableSmartCrop)
     {
         var width = Math.Max(1, setting.Width);
         var height = Math.Max(1, setting.Height);
+
+        if (enableSmartCrop && setting.ResizeMode == ResizeMode.Fill)
+        {
+            return new AiSmartCropOperation(width, height, setting.AllowUpscale, aiService);
+        }
 
         return setting.ResizeMode switch
         {
@@ -72,11 +89,19 @@ public static class RecipeOperationFactory
             marginPixels: 16);
     }
 
-    private static IImageOperation? BuildRenameOperation(RecipeOperation setting)
+    private static IImageOperation? BuildRenameOperation(
+        RecipeOperation setting,
+        IImageAiService? aiService,
+        bool enableAutoNaming)
     {
         if (string.IsNullOrWhiteSpace(setting.RenameTemplate))
         {
             return null;
+        }
+
+        if (enableAutoNaming)
+        {
+            return new AiOutputNamingOperation(setting.RenameTemplate, aiService);
         }
 
         return new OutputNamingOperation(setting.RenameTemplate);

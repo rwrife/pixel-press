@@ -110,8 +110,8 @@ public sealed class ImageSharpCodec : IImageCodec
 
             return new ImageSaveResult(
                 fallback.LongLength,
-                targetSatisfied: false,
-                message: $"Target file size {targetBytes} bytes could not be met. Minimum quality output is {fallback.LongLength} bytes.");
+                TargetSatisfied: false,
+                Message: $"Target file size {targetBytes} bytes could not be met. Minimum quality output is {fallback.LongLength} bytes.");
         }
 
         await File.WriteAllBytesAsync(outputPath, bestPayload, cancellationToken);
@@ -133,7 +133,7 @@ public sealed class ImageSharpCodec : IImageCodec
     private static bool SupportsQualitySearch(OutputImageFormat format) =>
         format is OutputImageFormat.Jpeg or OutputImageFormat.Webp;
 
-    private static int ClampQuality(int? quality) => Math.Clamp(quality ?? 90, 0, 100);
+    private static int ClampQuality(int? quality) => Math.Clamp(quality ?? 90, 1, 100);
 
     private static async Task<byte[]> EncodeToBytesAsync(
         Image<Rgba32> image,
