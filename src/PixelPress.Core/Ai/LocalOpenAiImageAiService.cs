@@ -99,12 +99,12 @@ public sealed class LocalOpenAiImageAiService : IImageAiService
     {
         ArgumentNullException.ThrowIfNull(image);
 
-        var prompt = $"""
+        var prompt = $$"""
             Analyze this image and choose the best visual focus point for a crop.
             Return ONLY compact JSON with normalized coordinates:
-            {{"x":0.50,"y":0.50}}
+            {"x":0.50,"y":0.50}
             Do not include markdown or commentary.
-            Source file name: {Path.GetFileName(inputPath)}
+            Source file name: {{Path.GetFileName(inputPath)}}
             """;
 
         var text = await RequestVisionTextAsync(prompt, image, cancellationToken);
