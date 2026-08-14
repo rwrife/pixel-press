@@ -133,7 +133,7 @@ public sealed class ImageSharpCodec : IImageCodec
     private static bool SupportsQualitySearch(OutputImageFormat format) =>
         format is OutputImageFormat.Jpeg or OutputImageFormat.Webp;
 
-    private static int ClampQuality(int? quality) => Math.Clamp(quality ?? 90, 0, 100);
+    private static int ClampQuality(int? quality) => Math.Clamp(quality ?? 90, 1, 100);
 
     private static async Task<byte[]> EncodeToBytesAsync(
         Image<Rgba32> image,
