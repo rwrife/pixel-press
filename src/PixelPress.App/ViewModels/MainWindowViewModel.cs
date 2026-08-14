@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.IO;
 using System.Windows.Media.Imaging;
 using PixelPress.App.Commands;
 using PixelPress.App.Services;

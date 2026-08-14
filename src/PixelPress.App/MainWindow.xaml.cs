@@ -1,5 +1,5 @@
+using System.IO;
 using System.Windows;
-using Microsoft.Win32;
 using PixelPress.App.ViewModels;
 using PixelPress.Core;
 using PixelPress.Core.Recipes;
@@ -86,7 +86,7 @@ public partial class MainWindow : Window
         try
         {
             var result = await ViewModel.RunBatchAsync(progressHandler, cts.Token);
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 this,
                 ViewModel.BuildResultSummary(result),
                 "Batch complete",
@@ -95,7 +95,7 @@ public partial class MainWindow : Window
         }
         catch (OperationCanceledException)
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 this,
                 "Batch run canceled.",
                 "Canceled",
@@ -104,7 +104,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 this,
                 $"Batch run failed: {ex.Message}",
                 "Run failed",
@@ -140,7 +140,7 @@ public partial class MainWindow : Window
             var recipe = ViewModel.ExportRecipe(recipeName);
             var savedPath = _recipeStore.Save(recipe, dialog.FileName);
 
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 this,
                 $"Recipe saved to:\n{savedPath}",
                 "Recipe saved",
@@ -149,7 +149,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 this,
                 $"Could not save recipe: {ex.Message}",
                 "Save failed",
@@ -215,7 +215,7 @@ public partial class MainWindow : Window
         var preset = RecipeCatalog.FindBuiltIn(presetName);
         if (preset is null)
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 this,
                 $"Preset '{presetName}' was not found.",
                 "Preset unavailable",
@@ -236,7 +236,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 this,
                 $"Could not load recipe: {ex.Message}",
                 "Load failed",
