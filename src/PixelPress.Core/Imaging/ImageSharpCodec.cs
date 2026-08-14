@@ -110,8 +110,8 @@ public sealed class ImageSharpCodec : IImageCodec
 
             return new ImageSaveResult(
                 fallback.LongLength,
-                targetSatisfied: false,
-                message: $"Target file size {targetBytes} bytes could not be met. Minimum quality output is {fallback.LongLength} bytes.");
+                TargetSatisfied: false,
+                Message: $"Target file size {targetBytes} bytes could not be met. Minimum quality output is {fallback.LongLength} bytes.");
         }
 
         await File.WriteAllBytesAsync(outputPath, bestPayload, cancellationToken);

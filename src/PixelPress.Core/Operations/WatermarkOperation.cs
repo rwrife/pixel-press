@@ -187,12 +187,13 @@ public sealed class WatermarkOperation : IImageOperation
             return new Image<Rgba32>(1, 1);
         }
 
-        var family = SystemFonts.Collection.Families.FirstOrDefault();
-        if (family is null)
+        var families = SystemFonts.Collection.Families;
+        if (!families.Any())
         {
             return BuildFallbackTextOverlay(targetWidth, baseHeight, text);
         }
 
+        var family = families.First();
         const float baseFontSize = 24f;
         var baseFont = family.CreateFont(baseFontSize, FontStyle.Regular);
         var baseMeasure = TextMeasurer.MeasureSize(text, new TextOptions(baseFont));
