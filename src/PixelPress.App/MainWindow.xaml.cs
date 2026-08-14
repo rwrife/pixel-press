@@ -186,25 +186,25 @@ public partial class MainWindow : Window
         LoadBuiltInPreset("Email compress");
     }
 
-    private void Window_Drop(object sender, DragEventArgs e)
+    private void Window_Drop(object sender, System.Windows.DragEventArgs e)
     {
         HandleDrop(e);
     }
 
-    private void InputList_Drop(object sender, DragEventArgs e)
+    private void InputList_Drop(object sender, System.Windows.DragEventArgs e)
     {
         HandleDrop(e);
         e.Handled = true;
     }
 
-    private void HandleDrop(DragEventArgs e)
+    private void HandleDrop(System.Windows.DragEventArgs e)
     {
-        if (!e.Data.GetDataPresent(DataFormats.FileDrop))
+        if (!e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
         {
             return;
         }
 
-        if (e.Data.GetData(DataFormats.FileDrop) is string[] paths && paths.Length > 0)
+        if (e.Data.GetData(System.Windows.DataFormats.FileDrop) is string[] paths && paths.Length > 0)
         {
             ViewModel.AddInputs(paths);
         }
