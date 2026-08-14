@@ -36,7 +36,7 @@ public partial class MainWindow : Window
 
     private void AddFilesButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFileDialog
+        var dialog = new Microsoft.Win32.OpenFileDialog
         {
             Multiselect = true,
             Title = "Select image files",
@@ -119,7 +119,7 @@ public partial class MainWindow : Window
 
     private void SaveRecipeButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new SaveFileDialog
+        var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Title = "Save recipe",
             Filter = "Recipe JSON|*.json",
@@ -160,7 +160,7 @@ public partial class MainWindow : Window
 
     private void LoadRecipeButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFileDialog
+        var dialog = new Microsoft.Win32.OpenFileDialog
         {
             Title = "Load recipe",
             Filter = "Recipe JSON|*.json|All files|*.*",
